@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Virtual Tour 360 Monas</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <style>
+    body, html { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+    .info-panel { 
+      position: absolute; right: 20px; top: 20px; 
+      width: 340px; background: rgba(0,0,0,0.72); 
+      color: white; padding: 12px; border-radius: 8px; 
+      display: none; z-index: 5;
+      transition: opacity 0.5s ease;
+    }
+    .info-panel h3 { margin: 0 0 6px 0; }
+    .ui-note { 
+      position: absolute; left: 20px; bottom: 20px; 
+      background: rgba(255,255,255,0.9); padding: 8px 12px; 
+      border-radius: 8px; z-index: 5 
+    }
+    .btn { 
+      background:#1976d2; color:white; padding:6px 10px; 
+      border-radius:6px; text-decoration:none; display:inline-block; margin-top:8px 
+    }
+  </style>
+</head>
+<body>
+  <!-- Panel Info -->
+  <div class="info-panel" id="infoPanel">
+    <h3 id="infoTitle">Judul</h3>
+    <div id="infoText">Detail informasi akan muncul di sini.</div>
+    <a id="infoLink" class="btn" href="#" target="_blank">Buka Link</a>
+    <div style="margin-top:8px;"><a href="#" class="btn" id="closeInfo">Tutup</a></div>
+  </div>
+
+  <!-- Catatan Panduan -->
+  <div class="ui-note">
+    Panduan: klik hotspot (bola berwarna) untuk info.<br>
+    Tekan angka <b>1 / 2 / 3</b> untuk pindah panorama.
+  </div>
+
+  <!-- Scene VR -->
+  <a-scene cursor="rayOrigin: mouse" vr-mode-ui="enabled: true" renderer="antialias: true">
+    <a-assets>
+      <!-- Ganti file foto sesuai punya kamu -->
+      <img id="pano1" src="pano1.jpg">
+      <img id="pano2" src="pano2.jpg">
+      <img id="pano3" src="pano3.jpg">
+    </a-assets>
+
+    <!-- Kamera -->
+    <a-entity id="cameraRig">
+      <a-entity camera look-controls position="0 1.6 0">
+        <a-entity cursor="fuse: false; rayOrigin: mouse"
+                  raycaster="objects: .clickable"
+                  geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                  material="shader: flat; color: white; opacity: 0.9"></a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- Sky panoramas (3 halaman) -->
+    <a-sky id="sky1" src="#pano1" visible="true" animation__fade="property: material.opacity; from:0; to:1; dur:1000"></a-sky>
+    <a-sky id="sky2" src="#pano2" visible="false" opacity="0"></a-sky>
+    <a-sky id="sky3" src="#pano3" visible="false" opacity="0"></a-sky>
+
+    <!-- Scene 1 Hotspot -->
+    <a-entity id="scene1" class="scene">
+      <a-entity class="clickable"
+                geometry="primitive: sphere; radius: 0.2"
+                material="color: #ff5722; opacity: 0.8"
+                position="0 1 -3"
+                id="hotspotMonas"></a-entity>
+      <a-text value="Info Monas" align="center" position="0 0.5 -3" scale="0.6 0.6 0.6"></a-text>
+    </a-entity>
+
+    <!-- Scene 2 Hotspot -->
+    <a-entity id="scene2" class="scene" visible="false">
+      <a-entity class="clickable"
+                geometry="primitive: sphere; radius: 0.2"
+                material="color: #4caf50; opacity: 0.8"
+                position="1 1 -3"
+                id="hotspotTaman"></a-entity>
+      <a-text value="Info Taman" align="center" position="1 0.5 -3" scale="0.6 0.6 0.6"></a-text>
+    </a-entity>
+
+    <!-- Scene 3 Hotspot -->
+    <a-entity id="scene3" class="scene" visible="false">
+      <a-entity class="clickable"
+                geometry="primitive: sphere; radius: 0.2"
+                material="color: #2196f3; opacity: 0.8"
+                position="-1 1 -3"
+                id="hotspotMuseum"></a-entity>
+      <a-text value="Info Museum" align="center" position="-1 0.5 -3" scale="0.6 0.6 0.6"></a-text>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // Elemen
+    const sky1 = document.getElementById('sky1');
+    const sky2 = document.getElementById('sky2');
+    const sky3 = document.getElementById('sky3');
+    const scene1 = document.getElementById('scene1');
+    const scene2 = document.getElementById('scene2');
+    const scene3 = document.getElementById('scene3');
+
+    const infoPanel = document.getElementById('infoPanel');
+    const infoTitle = document.getElementById('infoTitle');
+    const infoText = document.getElementById('infoText');
+    const infoLink = document.getElementById('infoLink');
+    const closeInfo = document.getElementById('closeInfo');
+
+    function showScene(n){
+      // Semua sky invisible
+      [sky1,sky2,sky3].forEach(s=>{s.setAttribute('visible','false'); s.setAttribute('opacity','0');});
+      [scene1,scene2,scene3].forEach(s=>s.setAttribute('visible','false'));
+
+      // Tampilkan sesuai scene
+      if(n===1){ sky1.setAttribute('visible','true'); scene1.setAttribute('visible','true'); fadeIn(sky1); }
+      if(n===2){ sky2.setAttribute('visible','true'); scene2.setAttribute('visible','true'); fadeIn(sky2); }
+      if(n===3){ sky3.setAttribute('visible','true'); scene3.setAttribute('visible','true'); fadeIn(sky3); }
+    }
+
+    function fadeIn(sky){
+      sky.setAttribute('animation__fadeIn', {
+        property: 'material.opacity',
+        from: 0,
+        to: 1,
+        dur: 1000
+      });
+    }
+
+    // Hotspot events
+    document.getElementById('hotspotMonas').addEventListener('click', ()=>{
+      infoTitle.innerText = 'Monumen Nasional (Monas)';
+      infoText.innerHTML = 'Ikon Jakarta dengan tinggi 132 meter. Dibangun tahun 1961.';
+      infoLink.href = 'https://id.wikipedia.org/wiki/Monumen_Nasional';
+      infoLink.innerText = 'Wikipedia Monas';
+      infoPanel.style.display = 'block';
+    });
+
+    document.getElementById('hotspotTaman').addEventListener('click', ()=>{
+      infoTitle.innerText = 'Taman Monas';
+      infoText.innerHTML = 'Taman luas di sekitar Monas tempat warga berolahraga dan bersantai.';
+      infoLink.href = 'https://www.indonesia.travel/id/id/destinasi/jakarta/monas';
+      infoLink.innerText = 'Informasi Pariwisata';
+      infoPanel.style.display = 'block';
+    });
+
+    document.getElementById('hotspotMuseum').addEventListener('click', ()=>{
+      infoTitle.innerText = 'Museum Sejarah Nasional';
+      infoText.innerHTML = 'Terletak di bagian bawah Monas, menampilkan diorama sejarah Indonesia.';
+      infoLink.href = 'https://jakarta-tourism.go.id/';
+      infoLink.innerText = 'Pariwisata Jakarta';
+      infoPanel.style.display = 'block';
+    });
+
+    // Tutup info
+    closeInfo.addEventListener('click', (e)=>{ e.preventDefault(); infoPanel.style.display='none'; });
+
+    // Keyboard navigasi
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='1') showScene(1);
+      if(e.key==='2') showScene(2);
+      if(e.key==='3') showScene(3);
+    });
+
+    // Awal
+    showScene(1);
+  </script>
+</body>
+</html>
